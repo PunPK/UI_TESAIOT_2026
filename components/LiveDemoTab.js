@@ -4,7 +4,6 @@ import { PoseDetectionCanvas } from './PoseDetectionCanvas.js';
 import { poseService } from '../services/pose.service.js';
 import { streamService } from '../services/stream.service.js';
 import { wsService } from '../services/websocket.service.js';
-import { sensingService } from '../services/sensing.service.js';
 
 // Optional services - loaded lazily in init() to avoid blocking module graph
 let modelService = null;

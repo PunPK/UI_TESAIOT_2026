@@ -4,30 +4,22 @@ import { TabManager } from './components/TabManager.js';
 import { DashboardTab } from './components/DashboardTab.js';
 import { HardwareTab } from './components/HardwareTab.js';
 import { LiveDemoTab } from './components/LiveDemoTab.js';
-import { SensingTab } from './components/SensingTab.js';
 import { apiService } from './services/api.service.js';
 import { wsService } from './services/websocket.service.js';
 import { healthService } from './services/health.service.js';
-import { sensingService } from './services/sensing.service.js';
 import { backendDetector } from './utils/backend-detector.js';
-import { KeyboardShortcuts } from './utils/keyboard-shortcuts.js';
-import { PerfMonitor } from './utils/perf-monitor.js';
-import { toastManager } from './utils/toast.js';
 import { ThemeToggle } from './utils/theme-toggle.js';
 import { CommandPalette } from './utils/command-palette.js';
 import { ActivityLog } from './utils/activity-log.js';
 import { DataExport } from './utils/data-export.js';
-import { FullscreenManager } from './utils/fullscreen.js';
-import { ConnectionStatus } from './utils/connection-status.js';
 import { MobileNav } from './utils/mobile-nav.js';
 import { Router } from './utils/router.js';
 import { Onboarding } from './utils/onboarding.js';
 import { IdleManager } from './utils/idle-manager.js';
 import { NotificationCenter } from './utils/notification-center.js';
-import { i18n } from './utils/i18n.js';
-import { ScreenshotTool } from './utils/screenshot.js';
 import { UptimeClock } from './utils/uptime-clock.js';
-import { QuickSettings } from './utils/quick-settings.js';
+import { PerfMonitor } from './utils/perf-monitor.js';
+import { toastManager } from './utils/toast.js';
 
 class WiFiDensePoseApp {
   constructor() {
@@ -97,10 +89,6 @@ class WiFiDensePoseApp {
         console.warn('⚠️ Backend not available:', error.message);
         this.showBackendStatus('Backend unavailable — start sensing-server', 'warning');
       }
-
-      // Start the sensing WebSocket service early so the dashboard and
-      // live-demo tabs can show the correct data-source status immediately.
-      sensingService.start();
     }
   }
 
@@ -150,20 +138,8 @@ class WiFiDensePoseApp {
       this.components.demo.init();
     }
 
-    // Sensing tab
-    const sensingContainer = document.getElementById('sensing');
-    if (sensingContainer) {
-      this.components.sensing = new SensingTab(sensingContainer);
-    }
-
-    // Training tab - lazy load to avoid breaking other tabs if import fails
+    // Sensing tab - removed
     this.initTrainingTab();
-
-    // Architecture tab - static content, no component needed
-
-    // Performance tab - static content, no component needed
-
-    // Applications tab - static content, no component needed
   }
 
   // Lazy-load Training tab panels (dynamic import so failures don't break other tabs)
@@ -193,10 +169,6 @@ class WiFiDensePoseApp {
     // Toast notifications
     toastManager.init();
 
-    // Connection status widget in header
-    this.connectionStatus = new ConnectionStatus();
-    this.connectionStatus.init();
-
     // Theme toggle
     this.themeToggle = new ThemeToggle();
     this.themeToggle.init();
@@ -213,10 +185,6 @@ class WiFiDensePoseApp {
     this.dataExport = new DataExport();
     this.dataExport.init();
 
-    // Fullscreen manager
-    this.fullscreenManager = new FullscreenManager();
-    this.fullscreenManager.init();
-
     // Command palette (Ctrl+K)
     this.commandPalette = new CommandPalette(this);
     this.commandPalette.init();
@@ -229,41 +197,9 @@ class WiFiDensePoseApp {
     this.notificationCenter = new NotificationCenter();
     this.notificationCenter.init();
 
-    // Screenshot tool
-    this.screenshotTool = new ScreenshotTool();
-    this.screenshotTool.init();
-
     // Uptime clock
     this.uptimeClock = new UptimeClock();
     this.uptimeClock.init();
-
-    // Quick settings panel
-    this.quickSettings = new QuickSettings(this);
-    this.quickSettings.init();
-
-    // Internationalization (EN/PL)
-    i18n.init();
-
-    // Keyboard shortcuts (pass app reference for tab switching)
-    this.keyboardShortcuts = new KeyboardShortcuts(this);
-    this.keyboardShortcuts.register('l', 'Toggle activity log', () => {
-      document.dispatchEvent(new CustomEvent('toggle-activity-log'));
-    });
-    this.keyboardShortcuts.register('e', 'Export sensor data', () => {
-      document.dispatchEvent(new CustomEvent('export-data'));
-    });
-    this.keyboardShortcuts.register('f', 'Toggle fullscreen', () => {
-      document.dispatchEvent(new CustomEvent('toggle-fullscreen'));
-    });
-    this.keyboardShortcuts.register('s', 'Take screenshot', () => {
-      document.dispatchEvent(new CustomEvent('take-screenshot'));
-    });
-    this.keyboardShortcuts.init();
-
-    // Listen for show-shortcuts from command palette
-    document.addEventListener('show-shortcuts', () => {
-      this.keyboardShortcuts.showHelp();
-    });
 
     // Register PWA service worker
     this.registerServiceWorker();
@@ -321,15 +257,6 @@ class WiFiDensePoseApp {
         
       case 'demo':
         // Demo starts manually
-        break;
-
-      case 'sensing':
-        // Lazy-init sensing tab on first visit
-        if (this.components.sensing && !this.components.sensing.splatRenderer) {
-          this.components.sensing.init().catch(error => {
-            console.error('Failed to initialize sensing tab:', error);
-          });
-        }
         break;
 
       case 'training':
@@ -436,23 +363,17 @@ class WiFiDensePoseApp {
     healthService.dispose();
 
     // Dispose enhancements
-    if (this.keyboardShortcuts) this.keyboardShortcuts.dispose();
     if (this.perfMonitor) this.perfMonitor.dispose();
-    if (this.themeToggle) this.themeToggle.dispose();
     if (this.commandPalette) this.commandPalette.dispose();
     if (this.activityLog) this.activityLog.dispose();
     if (this.dataExport) this.dataExport.dispose();
-    if (this.fullscreenManager) this.fullscreenManager.dispose();
-    if (this.connectionStatus) this.connectionStatus.dispose();
     if (this.mobileNav) this.mobileNav.dispose();
     if (this.router) this.router.dispose();
     if (this.onboarding) this.onboarding.dispose();
     if (this.idleManager) this.idleManager.dispose();
     if (this.notificationCenter) this.notificationCenter.dispose();
-    if (this.screenshotTool) this.screenshotTool.dispose();
     if (this.uptimeClock) this.uptimeClock.dispose();
-    if (this.quickSettings) this.quickSettings.dispose();
-    i18n.dispose();
+    if (this.themeToggle) this.themeToggle.dispose();
     toastManager.dispose();
   }
 
