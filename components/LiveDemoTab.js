@@ -115,21 +115,15 @@ export class LiveDemoTab {
       // Initialize state
       this.updateUI();
 
-      // Auto-start pose detection when a backend is reachable.
-      // Check after a brief delay (sensing WS may still be connecting).
+      // Auto-start pose detection after a brief delay
       this._autoStartOnce = false;
       const tryAutoStart = () => {
         if (this._autoStartOnce || this.state.isActive) return;
-        const ds = sensingService.dataSource;
-        if (ds === 'live' || ds === 'server-simulated') {
-          this._autoStartOnce = true;
-          this.logger.info('Auto-starting pose detection (data source: ' + ds + ')');
-          this.startDemo();
-        }
+        this._autoStartOnce = true;
+        this.logger.info('Auto-starting pose detection');
+        this.startDemo();
       };
       setTimeout(tryAutoStart, 2000);
-      // Also listen for sensing state changes in case server connects later
-      this._autoStartUnsub = sensingService.onStateChange(tryAutoStart);
 
       this.logger.info('LiveDemoTab component initialized successfully');
     } catch (error) {
@@ -1089,20 +1083,6 @@ export class LiveDemoTab {
       this.updateMetricsDisplay();
     }, 1000);
 
-    // Subscribe to sensing service for data-source changes
-    this._sensingStateUnsub = sensingService.onStateChange(() => {
-      this.updateSourceBanner();
-      this.updateStatusIndicator();
-    });
-    // Throttle data-based banner updates (frames arrive at 10Hz)
-    let lastBannerUpdate = 0;
-    this._sensingDataUnsub = sensingService.onData(() => {
-      const now = Date.now();
-      if (now - lastBannerUpdate > 2000) {
-        lastBannerUpdate = now;
-        this.updateSourceBanner();
-      }
-    });
     // Initial banner update
     this.updateSourceBanner();
 
@@ -1304,9 +1284,8 @@ export class LiveDemoTab {
     if (!this.state.isActive) {
       return this.state.connectionState === 'error' ? 'error' : '';
     }
-    const ds = sensingService.dataSource;
-    if (ds === 'live') return 'active';
-    if (ds === 'server-simulated') return 'sim';
+    if (this.state.connectionState === 'connected') return 'active';
+    if (this.state.connectionState === 'simulated') return 'sim';
     return 'connecting';
   }
 
@@ -1314,10 +1293,8 @@ export class LiveDemoTab {
     if (!this.state.isActive) {
       return this.state.connectionState === 'error' ? 'Error' : 'Ready';
     }
-    const ds = sensingService.dataSource;
-    if (ds === 'live') return 'Active \u2014 ESP32 Live';
-    if (ds === 'server-simulated') return 'Active \u2014 Simulated Data';
-    if (ds === 'simulated') return 'Active \u2014 Offline Simulation';
+    if (this.state.connectionState === 'connected') return 'Active';
+    if (this.state.connectionState === 'simulated') return 'Active (Simulated)';
     return 'Connecting...';
   }
 
@@ -1325,14 +1302,13 @@ export class LiveDemoTab {
   updateSourceBanner() {
     const banner = this.container.querySelector('#demo-source-banner');
     if (!banner) return;
-    const ds = sensingService.dataSource;
     const config = {
-      'live':             { text: 'LIVE \u2014 ESP32 Hardware Connected',           cls: 'demo-source-live' },
-      'server-simulated': { text: 'SIMULATED DATA \u2014 No Hardware Detected',     cls: 'demo-source-sim' },
-      'reconnecting':     { text: 'RECONNECTING TO SERVER...',                      cls: 'demo-source-reconnecting' },
-      'simulated':        { text: 'OFFLINE \u2014 Server Unreachable, Local Sim',   cls: 'demo-source-offline' },
+      'connected':             { text: 'LIVE DATA',              cls: 'demo-source-live' },
+      'simulated':             { text: 'SIMULATED DATA',         cls: 'demo-source-sim' },
+      'connecting':            { text: 'CONNECTING...',          cls: 'demo-source-reconnecting' },
+      'disconnected':          { text: 'OFFLINE',                cls: 'demo-source-offline' },
     };
-    const cfg = config[ds] || config['reconnecting'];
+    const cfg = config[this.state.connectionState] || config['connecting'];
     banner.textContent = cfg.text;
     banner.className = 'demo-source-banner ' + cfg.cls;
   }
@@ -1365,18 +1341,17 @@ export class LiveDemoTab {
     };
 
     if (elements.connectionStatus) {
-      const ds = sensingService.dataSource;
       const dsLabels = {
-        'live':              'Connected \u2014 ESP32',
-        'server-simulated':  'Connected \u2014 Simulated',
-        'reconnecting':      'Reconnecting...',
-        'simulated':         'Offline \u2014 Simulated',
+        'connected':              'Connected',
+        'simulated':              'Simulated',
+        'connecting':             'Connecting...',
+        'disconnected':           'Offline',
       };
-      const label = dsLabels[ds] || this.state.connectionState;
+      const label = dsLabels[this.state.connectionState] || this.state.connectionState;
       elements.connectionStatus.textContent = label;
-      const cls = ds === 'live' ? 'good'
-        : ds === 'server-simulated' ? 'sim'
-        : ds === 'simulated' ? 'bad'
+      const cls = this.state.connectionState === 'connected' ? 'good'
+        : this.state.connectionState === 'simulated' ? 'sim'
+        : this.state.connectionState === 'disconnected' ? 'bad'
         : this.getHealthClass(this.state.connectionState);
       elements.connectionStatus.className = `health-${cls}`;
     }
@@ -1873,9 +1848,6 @@ export class LiveDemoTab {
       // Unsubscribe from services
       this.subscriptions.forEach(unsubscribe => unsubscribe());
       this.subscriptions = [];
-      if (this._sensingStateUnsub) this._sensingStateUnsub();
-      if (this._sensingDataUnsub) this._sensingDataUnsub();
-      if (this._autoStartUnsub) this._autoStartUnsub();
       
       this.logger.info('LiveDemoTab component disposed successfully');
     } catch (error) {
