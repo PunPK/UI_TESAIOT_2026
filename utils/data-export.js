@@ -1,6 +1,5 @@
 // Data Export Utility - Export sensor/pose data as JSON or CSV
 
-import { sensingService } from '../services/sensing.service.js';
 import { toastManager } from './toast.js';
 
 export class DataExport {
@@ -8,22 +7,10 @@ export class DataExport {
     this.buffer = [];
     this.maxBuffer = 1000;
     this.recording = false;
-    this._unsub = null;
   }
 
   init() {
     document.addEventListener('export-data', () => this.showExportDialog());
-
-    // Continuously buffer sensing data when available
-    this._unsub = sensingService.onData((data) => {
-      if (this.buffer.length >= this.maxBuffer) {
-        this.buffer.shift();
-      }
-      this.buffer.push({
-        timestamp: new Date().toISOString(),
-        ...this.extractFields(data)
-      });
-    });
   }
 
   extractFields(data) {
@@ -143,6 +130,6 @@ export class DataExport {
   }
 
   dispose() {
-    if (this._unsub) this._unsub();
+    this.buffer = [];
   }
 }

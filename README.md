@@ -18,14 +18,12 @@ ui/
 │   ├── websocket.service.js  # WebSocket connection manager
 │   ├── websocket-client.js   # Low-level WebSocket client
 │   ├── pose.service.js       # Pose estimation API wrapper
-│   ├── sensing.service.js    # WiFi sensing data service (live + simulation fallback)
 │   ├── health.service.js     # Health monitoring API wrapper
 │   ├── stream.service.js     # Streaming API wrapper
 │   └── data-processor.js     # Signal data processing utilities
 ├── components/
 │   ├── TabManager.js         # Tab navigation component
 │   ├── DashboardTab.js       # Dashboard with live system metrics
-│   ├── SensingTab.js         # WiFi sensing visualization (3D signal field, metrics)
 │   ├── LiveDemoTab.js        # Live pose detection with setup guide
 │   ├── HardwareTab.js        # Hardware configuration
 │   ├── SettingsPanel.js      # Settings panel
@@ -79,18 +77,6 @@ ui/
 - Real-time CSI data display
 - Configuration panels
 - Hardware status monitoring
-
-## Data Sources
-
-The sensing service (`sensing.service.js`) supports three connection states:
-
-| State | Banner Color | Description |
-|-------|-------------|-------------|
-| **LIVE - ESP32** | Green | Connected to the Rust sensing server receiving real CSI data |
-| **RECONNECTING** | Yellow (pulsing) | WebSocket disconnected, retrying (up to 20 attempts) |
-| **SIMULATED DATA** | Red | Fallback to client-side simulation after 5+ failed reconnects |
-
-Simulated frames include a `_simulated: true` marker so code can detect synthetic data.
 
 ## Backends
 
