@@ -48,35 +48,6 @@ body {
   z-index: 10;
 }
 
-/* ---- Brand ---- */
-#brand {
-  position: absolute;
-  top: 24px; left: 28px;
-}
-
-#brand-logo {
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 32px;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
-  text-shadow: 0 0 30px rgba(0, 216, 120, 0.3);
-}
-
-.pi {
-  color: var(--green-glow);
-  font-style: italic;
-  margin-right: 2px;
-}
-
-#brand-tagline {
-  font-size: 11px;
-  color: var(--text-secondary);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-top: 2px;
-}
-
 /* ---- Status bar (top right) ---- */
 #status-bar {
   position: absolute;
@@ -181,11 +152,19 @@ body {
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
-/* ---- Vitals Panel (left) ---- */
-#panel-vitals {
-  left: 28px;
+/* ---- Right panel stack (Vitals + Signal) ---- */
+#panel-right-stack {
+  position: absolute;
+  right: 28px;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#panel-right-stack .data-panel {
+  position: static;
 }
 
 .vital-row {
@@ -248,13 +227,6 @@ body {
 .vital-bar--hr { background: var(--red-heart); width: 0%; }
 .vital-bar--br { background: var(--green-glow); width: 0%; }
 .vital-bar--conf { background: var(--amber); width: 0%; }
-
-/* ---- Signal Panel (right) ---- */
-#panel-signal {
-  right: 28px;
-  top: 50%;
-  transform: translateY(-50%);
-}
 
 .signal-row {
   display: flex;
@@ -334,46 +306,6 @@ body {
 @keyframes pulse-alert {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
-}
-
-/* ---- Capabilities Bar (bottom center) ---- */
-#capabilities-bar {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 0;
-  background: var(--bg-panel);
-  border: 1px solid var(--bg-panel-border);
-  border-radius: 30px;
-  padding: 8px 24px;
-  backdrop-filter: blur(12px);
-}
-
-.cap-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  padding: 0 16px;
-}
-
-.cap-icon {
-  font-size: 16px;
-  color: var(--green-glow);
-}
-
-.cap-item:nth-child(3) .cap-icon { color: var(--red-heart); }
-.cap-item:nth-child(5) .cap-icon { color: var(--blue-signal); }
-
-.cap-divider {
-  width: 1px;
-  height: 20px;
-  background: rgba(255,255,255,0.1);
 }
 
 /* ---- Key hints ---- */
@@ -627,7 +559,7 @@ body {
 /* ---- Edge Module Badges ---- */
 #edge-modules-bar {
   position: absolute;
-  bottom: 58px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -688,7 +620,6 @@ body {
 @media (max-width: 1200px) {
   .data-panel { width: 190px; padding: 12px; }
   .vital-value { font-size: 22px; }
-  #capabilities-bar { display: none; }
 }
 
 @media (max-width: 800px) {

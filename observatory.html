@@ -12,12 +12,6 @@
   <!-- ======= HUD Overlay ======= -->
   <div id="hud">
 
-    <!-- Top-left: Branding -->
-    <div id="brand">
-      <div id="brand-logo"><span class="pi">&pi;</span> RuView</div>
-      <div id="brand-tagline">WiFi DensePose Sensing Observatory</div>
-    </div>
-
     <!-- Top-right: Connection + status + gear -->
     <div id="status-bar">
       <div id="data-source-badge">
@@ -47,75 +41,67 @@
       <button id="settings-btn" title="Settings">&#9881;</button>
     </div>
 
-    <!-- Left panel: Vital Signs -->
-    <div id="panel-vitals" class="data-panel">
-      <div class="panel-header">Vital Signs</div>
-      <div class="vital-row">
-        <div class="vital-icon">&#9825;</div>
-        <div class="vital-data">
-          <div class="vital-label">Heart Rate</div>
-          <div class="vital-value"><span id="hr-value">--</span> <span class="vital-unit">BPM</span></div>
-          <div class="vital-bar"><div id="hr-bar" class="vital-bar-fill vital-bar--hr"></div></div>
+    <!-- Right panel stack: Vital Signs + Signal & Presence -->
+    <div id="panel-right-stack">
+      <div id="panel-vitals" class="data-panel">
+        <div class="panel-header">Vital Signs</div>
+        <div class="vital-row">
+          <div class="vital-icon">&#9825;</div>
+          <div class="vital-data">
+            <div class="vital-label">Heart Rate</div>
+            <div class="vital-value"><span id="hr-value">--</span> <span class="vital-unit">BPM</span></div>
+            <div class="vital-bar"><div id="hr-bar" class="vital-bar-fill vital-bar--hr"></div></div>
+          </div>
+        </div>
+        <div class="vital-row">
+          <div class="vital-icon">&#9788;</div>
+          <div class="vital-data">
+            <div class="vital-label">Respiration</div>
+            <div class="vital-value"><span id="br-value">--</span> <span class="vital-unit">RPM</span></div>
+            <div class="vital-bar"><div id="br-bar" class="vital-bar-fill vital-bar--br"></div></div>
+          </div>
+        </div>
+        <div class="vital-row">
+          <div class="vital-icon">&#9878;</div>
+          <div class="vital-data">
+            <div class="vital-label">Confidence</div>
+            <div class="vital-value"><span id="conf-value">--</span><span class="vital-unit">%</span></div>
+            <div class="vital-bar"><div id="conf-bar" class="vital-bar-fill vital-bar--conf"></div></div>
+          </div>
         </div>
       </div>
-      <div class="vital-row">
-        <div class="vital-icon">&#9788;</div>
-        <div class="vital-data">
-          <div class="vital-label">Respiration</div>
-          <div class="vital-value"><span id="br-value">--</span> <span class="vital-unit">RPM</span></div>
-          <div class="vital-bar"><div id="br-bar" class="vital-bar-fill vital-bar--br"></div></div>
-        </div>
-      </div>
-      <div class="vital-row">
-        <div class="vital-icon">&#9878;</div>
-        <div class="vital-data">
-          <div class="vital-label">Confidence</div>
-          <div class="vital-value"><span id="conf-value">--</span><span class="vital-unit">%</span></div>
-          <div class="vital-bar"><div id="conf-bar" class="vital-bar-fill vital-bar--conf"></div></div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Right panel: Signal & Presence -->
-    <div id="panel-signal" class="data-panel">
-      <div class="panel-header">WiFi Signal</div>
-      <div class="signal-row">
-        <span class="signal-label">RSSI</span>
-        <span class="signal-value" id="rssi-value">-- dBm</span>
-      </div>
-      <div class="signal-row">
-        <span class="signal-label">Variance</span>
-        <span class="signal-value" id="var-value">--</span>
-      </div>
-      <div class="signal-row">
-        <span class="signal-label">Motion</span>
-        <span class="signal-value" id="motion-value">--</span>
-      </div>
-      <div class="signal-row">
-        <span class="signal-label">Persons</span>
-        <span class="signal-value" id="persons-value">0</span>
-        <span id="persons-dots" class="persons-dots"></span>
-      </div>
-      <canvas id="rssi-sparkline" width="200" height="48"></canvas>
+      <div id="panel-signal" class="data-panel">
+        <div class="panel-header">WiFi Signal</div>
+        <div class="signal-row">
+          <span class="signal-label">RSSI</span>
+          <span class="signal-value" id="rssi-value">-- dBm</span>
+        </div>
+        <div class="signal-row">
+          <span class="signal-label">Variance</span>
+          <span class="signal-value" id="var-value">--</span>
+        </div>
+        <div class="signal-row">
+          <span class="signal-label">Motion</span>
+          <span class="signal-value" id="motion-value">--</span>
+        </div>
+        <div class="signal-row">
+          <span class="signal-label">Persons</span>
+          <span class="signal-value" id="persons-value">0</span>
+          <span id="persons-dots" class="persons-dots"></span>
+        </div>
+        <canvas id="rssi-sparkline" width="200" height="48"></canvas>
 
-      <div class="panel-header" style="margin-top:12px">Presence</div>
-      <div id="presence-indicator" class="presence-state presence--absent">
-        <span id="presence-label">ABSENT</span>
+        <div class="panel-header" style="margin-top:12px">Presence</div>
+        <div id="presence-indicator" class="presence-state presence--absent">
+          <span id="presence-label">ABSENT</span>
+        </div>
+        <div id="fall-alert" class="fall-alert" style="display:none">FALL DETECTED</div>
       </div>
-      <div id="fall-alert" class="fall-alert" style="display:none">FALL DETECTED</div>
     </div>
 
     <!-- Edge module badges (populated dynamically by HudController) -->
     <div id="edge-modules-bar"></div>
-
-    <!-- Bottom bar: capabilities -->
-    <div id="capabilities-bar">
-      <div class="cap-item"><span class="cap-icon">&#9898;</span><span>Human Pose Estimation</span></div>
-      <div class="cap-divider"></div>
-      <div class="cap-item"><span class="cap-icon">&#9829;</span><span>Vital Sign Monitoring</span></div>
-      <div class="cap-divider"></div>
-      <div class="cap-item"><span class="cap-icon">&#9784;</span><span>Presence Detection</span></div>
-    </div>
 
     <!-- Bottom-right: keyboard hints -->
     <div id="key-hints">
