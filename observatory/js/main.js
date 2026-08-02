@@ -4,7 +4,7 @@
  * Room-based WiFi sensing visualization with:
  * - Pool of 4 human wireframe figures (multi-person scenarios)
  * - 7 pose types (standing, walking, lying, sitting, fallen, exercising, gesturing, crouching)
- * - Scenario-specific room props (chair, exercise mat, door, rubble wall, screen, desk)
+ * - Scenario-specific room props (chair, exercise mat, door, rubble wall, screen)
  * - Dot-matrix mist body mass, particle trails, WiFi waves, signal field
  * - Reflective floor, settings dialog, and practical data HUD
  */

@@ -3,7 +3,7 @@
  *
  * Extracted from main.js. Builds and manages visibility of all physical
  * objects that appear/disappear based on the active scenario: bed, chair,
- * exercise mat, door, rubble wall, screen/TV, desks, security cameras,
+ * exercise mat, door, rubble wall, screen/TV, security cameras,
  * and the alert light system.
  */
 import * as THREE from 'three';
@@ -17,7 +17,7 @@ const SCENARIO_PROPS = {
   sleep_monitoring: ['bed'],
   intrusion_detect: ['door'],
   gesture_control:  ['screen'],
-  crowd_occupancy:  ['desk', 'desk2'],
+  crowd_occupancy:  [],
   search_rescue:    ['rubbleWall'],
   elderly_care:     ['chair'],
   fitness_tracking: ['exerciseMat'],
@@ -81,7 +81,6 @@ export class ScenarioProps {
     this._buildDoor();
     this._buildRubbleWall();
     this._buildScreen(metalMat);
-    this._buildDesks(darkMat, metalMat, accentMat);
     this._buildCameras(metalMat);
     this._buildAlertSystem();
   }
@@ -457,95 +456,6 @@ export class ScenarioProps {
     this._props.screen = screenGroup;
     screenGroup.visible = false;
     this._scene.add(screenGroup);
-  }
-
-  // ---- DESKS (crowd / office) ----
-  _buildDesks(darkMat, metalMat, accentMat) {
-    // Desk 1 (left)
-    const deskGroup = new THREE.Group();
-    deskGroup.add(this._box(-2, 0.38, -1, 1.2, 0.04, 0.6, darkMat));
-    for (const [lx, lz] of [[-2.55, -1.25], [-1.45, -1.25], [-2.55, -0.75], [-1.45, -0.75]]) {
-      deskGroup.add(this._box(lx, 0.19, lz, 0.04, 0.38, 0.04, darkMat));
-    }
-    // Monitor on desk 1
-    const monitorMat = new THREE.MeshStandardMaterial({ color: 0x484850, roughness: 0.2, metalness: 0.7, emissive: 0x0c0c14, emissiveIntensity: 0.15 });
-    const monScreenMat = new THREE.MeshStandardMaterial({
-      color: 0x183858, emissive: 0x183858, emissiveIntensity: 1.0, roughness: 0.1,
-    });
-    deskGroup.add(this._box(-2, 0.62, -1.15, 0.5, 0.35, 0.03, monitorMat));
-    deskGroup.add(this._box(-2, 0.62, -1.13, 0.44, 0.29, 0.01, monScreenMat));
-    deskGroup.add(this._box(-2, 0.42, -1.1, 0.06, 0.04, 0.06, metalMat)); // stand neck
-    deskGroup.add(this._box(-2, 0.40, -1.05, 0.18, 0.01, 0.12, metalMat)); // stand base
-    // Keyboard outline
-    deskGroup.add(this._box(-2, 0.405, -0.85, 0.35, 0.008, 0.12, accentMat));
-    // Office chair at desk 1
-    this._buildOfficeChair(deskGroup, -2, -0.55, darkMat, metalMat);
-
-    // Monitor glow light
-    const monLight = new THREE.PointLight(0x4080e0, 1.2, 4);
-    monLight.position.set(-2, 0.7, -1.0);
-    deskGroup.add(monLight);
-
-    this._props.desk = deskGroup;
-    deskGroup.visible = false;
-    this._scene.add(deskGroup);
-
-    // Desk 2 (right)
-    const desk2Group = new THREE.Group();
-    desk2Group.add(this._box(2, 0.38, 1, 1.0, 0.04, 0.6, darkMat));
-    for (const [lx, lz] of [[1.45, 0.75], [2.55, 0.75], [1.45, 1.25], [2.55, 1.25]]) {
-      desk2Group.add(this._box(lx, 0.19, lz, 0.04, 0.38, 0.04, darkMat));
-    }
-    // Monitor on desk 2
-    desk2Group.add(this._box(2, 0.62, 1.15, 0.5, 0.35, 0.03, monitorMat));
-    desk2Group.add(this._box(2, 0.62, 1.17, 0.44, 0.29, 0.01, monScreenMat));
-    desk2Group.add(this._box(2, 0.42, 1.1, 0.06, 0.04, 0.06, metalMat));
-    desk2Group.add(this._box(2, 0.40, 1.05, 0.18, 0.01, 0.12, metalMat));
-    // Keyboard
-    desk2Group.add(this._box(2, 0.405, 0.85, 0.35, 0.008, 0.12, accentMat));
-    // Office chair at desk 2
-    this._buildOfficeChair(desk2Group, 2, 0.55, darkMat, metalMat);
-
-    // Water cooler / plant between desks area
-    const plantMat = new THREE.MeshStandardMaterial({ color: 0x2a7838, roughness: 0.7, emissive: 0x0c2810, emissiveIntensity: 0.3 });
-    const potMat = new THREE.MeshStandardMaterial({ color: 0x706858, roughness: 0.6, emissive: 0x14120c, emissiveIntensity: 0.15 });
-    desk2Group.add(this._cyl(3.2, 0.15, 0, 0.12, 0.1, 0.3, 8, potMat));
-    // Foliage — cluster of small spheres
-    for (const [fx, fy, fz] of [[3.2, 0.45, 0], [3.15, 0.4, 0.06], [3.25, 0.42, -0.05]]) {
-      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 5), plantMat);
-      leaf.position.set(fx, fy, fz);
-      desk2Group.add(leaf);
-    }
-
-    // Monitor glow light
-    const monLight2 = new THREE.PointLight(0x4080e0, 1.2, 4);
-    monLight2.position.set(2, 0.7, 1.0);
-    desk2Group.add(monLight2);
-
-    this._props.desk2 = desk2Group;
-    desk2Group.visible = false;
-    this._scene.add(desk2Group);
-  }
-
-  // Helper: small office chair
-  _buildOfficeChair(parent, x, z, darkMat, metalMat) {
-    // Seat
-    parent.add(this._box(x, 0.38, z, 0.35, 0.03, 0.35, darkMat));
-    // Backrest
-    parent.add(this._box(x, 0.55, z - 0.16, 0.32, 0.3, 0.03, darkMat));
-    // Central post
-    parent.add(this._cyl(x, 0.22, z, 0.025, 0.025, 0.28, 6, metalMat));
-    // Base star (5 legs)
-    for (let i = 0; i < 5; i++) {
-      const angle = (i / 5) * Math.PI * 2;
-      const legLen = 0.16;
-      const leg = this._box(
-        x + Math.cos(angle) * legLen * 0.5, 0.04, z + Math.sin(angle) * legLen * 0.5,
-        legLen, 0.015, 0.025, metalMat
-      );
-      leg.rotation.y = -angle;
-      parent.add(leg);
-    }
   }
 
   // ---- SECURITY CAMERAS (patrol) ----

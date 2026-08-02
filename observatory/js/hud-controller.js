@@ -155,7 +155,7 @@ export class HudController {
     // Track current scenario for description/edge updates
     this._currentScenarioKey = null;
 
-    // Event history (fall / intrusion / apnea alerts + scenario timeline)
+    // Event history (fall / intrusion / apnea alerts only)
     this._eventLog = [];
     this._unreadAlerts = 0;
     this._prevFall = false;
@@ -545,11 +545,9 @@ export class HudController {
     // Scenario description and edge modules
     const scenarioKey = demoData._autoMode ? (demoData.currentScenario || 'auto') : (demoData.currentScenario || 'auto');
     if (scenarioKey !== this._currentScenarioKey) {
-      const isFirstScenario = this._currentScenarioKey === null;
       this._currentScenarioKey = scenarioKey;
       this._updateScenarioDescription(scenarioKey);
       this._updateEdgeModules(scenarioKey);
-      if (!isFirstScenario) this._logEvent('info', 'Scenario Changed', this._labelize(scenarioKey));
     }
 
     this._trackEvents(cls, scenarioKey);
