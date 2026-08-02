@@ -154,6 +154,13 @@ export class HudController {
 
     // Track current scenario for description/edge updates
     this._currentScenarioKey = null;
+
+    // Event history (fall / intrusion / apnea alerts + scenario timeline)
+    this._eventLog = [];
+    this._unreadAlerts = 0;
+    this._prevFall = false;
+    this._prevIntrusion = false;
+    this._prevApnea = false;
   }
 
   // ============================================================
@@ -286,6 +293,100 @@ export class HudController {
   }
 
   // ============================================================
+  // Sidebar nav (visual affordances for existing keyboard shortcuts)
+  // ============================================================
+
+  initSidebar() {
+    document.getElementById('nav-home')?.addEventListener('click', () => {
+      document.getElementById('btn-reset-camera')?.click();
+    });
+
+    this._bindOverlayToggle('nav-devices', 'panel-esp32');
+    this._bindOverlayToggle('nav-vitals', 'vital-signal-group');
+    this._bindOverlayToggle('nav-noti', 'panel-noti', () => {
+      this._unreadAlerts = 0;
+      this._updateNotiBadge();
+    });
+    this._bindOverlayToggle('nav-chat', 'chat-panel', () => {
+      this._obs._chat?.onOpen();
+    });
+
+    document.getElementById('nav-more')?.addEventListener('click', () => {
+      this.toggleSettings();
+    });
+  }
+
+  /** Wires a sidebar nav button to independently show/hide one overlay panel. */
+  _bindOverlayToggle(navId, panelId, onOpen) {
+    const btn = document.getElementById(navId);
+    const panel = document.getElementById(panelId);
+    if (!btn || !panel) return;
+    btn.addEventListener('click', () => {
+      const open = panel.classList.toggle('overlay-open');
+      btn.classList.toggle('active', open);
+      if (open && onOpen) onOpen();
+    });
+  }
+
+  // ============================================================
+  // Quick viewport toggles (grid / room / orbit / reset camera)
+  // ============================================================
+
+  initQuickViewportControls() {
+    const obs = this._obs;
+    const gridBtn = document.getElementById('quick-grid');
+    const roomBtn = document.getElementById('quick-room');
+    const orbitBtn = document.getElementById('quick-orbit');
+    const resetBtn = document.getElementById('quick-reset-cam');
+
+    gridBtn?.classList.toggle('is-active', obs.settings.grid);
+    gridBtn?.addEventListener('click', () => {
+      obs.settings.grid = !obs.settings.grid;
+      obs._grid.visible = obs.settings.grid;
+      gridBtn.classList.toggle('is-active', obs.settings.grid);
+      const cb = document.getElementById('opt-grid');
+      if (cb) cb.checked = obs.settings.grid;
+      this.saveSettings();
+    });
+
+    roomBtn?.classList.toggle('is-active', obs.settings.room);
+    roomBtn?.addEventListener('click', () => {
+      obs.settings.room = !obs.settings.room;
+      obs._roomWire.visible = obs.settings.room;
+      roomBtn.classList.toggle('is-active', obs.settings.room);
+      const cb = document.getElementById('opt-room');
+      if (cb) cb.checked = obs.settings.room;
+      this.saveSettings();
+    });
+
+    orbitBtn?.addEventListener('click', () => {
+      obs._autopilot = !obs._autopilot;
+      obs._controls.enabled = !obs._autopilot;
+      orbitBtn.classList.toggle('is-active', obs._autopilot);
+    });
+
+    resetBtn?.addEventListener('click', () => {
+      document.getElementById('btn-reset-camera')?.click();
+    });
+  }
+
+  // ============================================================
+  // Header primary action (pause / resume data feed)
+  // ============================================================
+
+  initHeaderActions() {
+    const obs = this._obs;
+    const btn = document.getElementById('header-cta');
+    if (!btn) return;
+    const sync = () => { btn.textContent = obs._demoData.paused ? 'Resume' : 'Pause'; };
+    btn.addEventListener('click', () => {
+      obs._demoData.paused = !obs._demoData.paused;
+      sync();
+    });
+    sync();
+  }
+
+  // ============================================================
   // Quick-select (top bar scenario dropdown)
   // ============================================================
 
@@ -360,8 +461,11 @@ export class HudController {
   // ============================================================
 
   updateSourceBadge(dataSource, ws) {
+    // Badge removed from the header UI; kept as a no-op guard so callers
+    // (WS connect/disconnect, data-source select) can still invoke it safely.
     const dot = document.querySelector('#data-source-badge .dot');
     const label = document.getElementById('data-source-label');
+    if (!dot || !label) return;
     if (dataSource === 'ws' && ws?.readyState === WebSocket.OPEN) {
       dot.className = 'dot dot--live'; label.textContent = 'LIVE';
     } else {
@@ -441,10 +545,92 @@ export class HudController {
     // Scenario description and edge modules
     const scenarioKey = demoData._autoMode ? (demoData.currentScenario || 'auto') : (demoData.currentScenario || 'auto');
     if (scenarioKey !== this._currentScenarioKey) {
+      const isFirstScenario = this._currentScenarioKey === null;
       this._currentScenarioKey = scenarioKey;
       this._updateScenarioDescription(scenarioKey);
       this._updateEdgeModules(scenarioKey);
+      if (!isFirstScenario) this._logEvent('info', 'Scenario Changed', this._labelize(scenarioKey));
     }
+
+    this._trackEvents(cls, scenarioKey);
+  }
+
+  // ============================================================
+  // Event history (fall / intrusion / apnea alerts)
+  // ============================================================
+
+  /** Watches classification flags for false->true edges and logs each as an event. */
+  _trackEvents(cls, scenarioKey) {
+    const fall = !!cls.fall_detected;
+    if (fall && !this._prevFall) {
+      this._logEvent('alert', 'Fall Detected', `During ${this._labelize(scenarioKey)}`);
+    }
+    this._prevFall = fall;
+
+    const intrusion = !!cls.intrusion;
+    if (intrusion && !this._prevIntrusion) {
+      this._logEvent('alert', 'Intrusion Detected', `During ${this._labelize(scenarioKey)}`);
+    }
+    this._prevIntrusion = intrusion;
+
+    const apnea = !!cls.apnea_detected;
+    if (apnea && !this._prevApnea) {
+      this._logEvent('alert', 'Apnea Event', `During ${this._labelize(scenarioKey)}`);
+    }
+    this._prevApnea = apnea;
+  }
+
+  /** Records one event entry, re-renders the list, and bumps the unread badge for alerts. */
+  _logEvent(severity, title, detail) {
+    this._eventLog.unshift({ severity, title, detail, time: new Date() });
+    if (this._eventLog.length > 50) this._eventLog.length = 50;
+
+    if (severity === 'alert') {
+      const panel = document.getElementById('panel-noti');
+      if (!panel || !panel.classList.contains('overlay-open')) {
+        this._unreadAlerts++;
+        this._updateNotiBadge();
+      }
+    }
+    this._renderNotiList();
+  }
+
+  _renderNotiList() {
+    const list = document.getElementById('noti-list');
+    const countEl = document.getElementById('noti-count');
+    if (countEl) countEl.textContent = `${this._eventLog.length} event${this._eventLog.length === 1 ? '' : 's'}`;
+    if (!list) return;
+    if (this._eventLog.length === 0) {
+      list.innerHTML = '<div class="noti-empty">No events yet.</div>';
+      return;
+    }
+    list.innerHTML = this._eventLog.map(e => `
+      <div class="noti-item noti-item--${e.severity}">
+        <span class="noti-dot"></span>
+        <div class="noti-body">
+          <div class="noti-title">${e.title}</div>
+          <div class="noti-detail">${e.detail}</div>
+        </div>
+        <span class="noti-time">${e.time.toLocaleTimeString([], { hour12: false })}</span>
+      </div>
+    `).join('');
+  }
+
+  _updateNotiBadge() {
+    const badge = document.getElementById('nav-noti-badge');
+    if (!badge) return;
+    if (this._unreadAlerts > 0) {
+      badge.textContent = this._unreadAlerts > 9 ? '9+' : String(this._unreadAlerts);
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  /** "fall_event" -> "Fall Event" */
+  _labelize(key) {
+    if (!key) return 'Unknown';
+    return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   // ============================================================

@@ -19,6 +19,7 @@ import { FigurePool, SKELETON_PAIRS } from './figure-pool.js';
 import { PoseSystem } from './pose-system.js';
 import { ScenarioProps } from './scenario-props.js';
 import { HudController, DEFAULTS, SETTINGS_VERSION, PRESETS, SCENARIO_NAMES } from './hud-controller.js';
+import { ChatAssistant } from './chat-assistant.js';
 
 // ---- Palette ----
 const C = {
@@ -53,14 +54,16 @@ class Observatory {
       }
     } catch {}
 
-    // Renderer
+    // Renderer — sized to the viewport container, not the full window,
+    // since the canvas now lives inside a bounded rounded panel.
     this._renderer = new THREE.WebGLRenderer({
       canvas: this._canvas,
       antialias: true,
       powerPreference: 'high-performance',
     });
     this._renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this._renderer.setSize(window.innerWidth, window.innerHeight);
+    const vp0 = this._viewportSize();
+    this._renderer.setSize(vp0.w, vp0.h);
     this._renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this._renderer.toneMappingExposure = this.settings.exposure;
     this._renderer.shadowMap.enabled = true;
@@ -73,7 +76,7 @@ class Observatory {
 
     // Camera
     this._camera = new THREE.PerspectiveCamera(
-      this.settings.fov, window.innerWidth / window.innerHeight, 0.1, 300
+      this.settings.fov, vp0.w / vp0.h, 0.1, 300
     );
     this._camera.position.set(6, 5, 8);
     this._camera.lookAt(0, 1.2, 0);
@@ -119,6 +122,9 @@ class Observatory {
     // HUD controller (settings dialog, sparkline, vital displays)
     this._hud = new HudController(this);
 
+    // Assistant chat (mockup command parser wired to real app actions)
+    this._chat = new ChatAssistant(this, this._hud);
+
     // State
     this._autopilot = false;
     this._autoAngle = 0;
@@ -137,6 +143,9 @@ class Observatory {
     this._initKeyboard();
     this._hud.initSettings();
     this._hud.initQuickSelect();
+    this._hud.initSidebar();
+    this._hud.initQuickViewportControls();
+    this._hud.initHeaderActions();
     window.addEventListener('resize', () => this._onResize());
 
     // Start
@@ -400,6 +409,7 @@ class Observatory {
         case 'a':
           this._autopilot = !this._autopilot;
           this._controls.enabled = !this._autopilot;
+          document.getElementById('quick-orbit')?.classList.toggle('is-active', this._autopilot);
           break;
         case 'd': this._demoData.cycleScenario(); break;
         case 'f':
@@ -410,6 +420,10 @@ class Observatory {
         case ' ':
           e.preventDefault();
           this._demoData.paused = !this._demoData.paused;
+          {
+            const cta = document.getElementById('header-cta');
+            if (cta) cta.textContent = this._demoData.paused ? 'Resume' : 'Pause';
+          }
           break;
       }
     });
@@ -707,8 +721,13 @@ class Observatory {
     }
   }
 
+  _viewportSize() {
+    const el = this._canvas.parentElement;
+    return { w: el.clientWidth || window.innerWidth, h: el.clientHeight || window.innerHeight };
+  }
+
   _onResize() {
-    const w = window.innerWidth, h = window.innerHeight;
+    const { w, h } = this._viewportSize();
     this._camera.aspect = w / h;
     this._camera.updateProjectionMatrix();
     this._renderer.setSize(w, h);

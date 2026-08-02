@@ -7,109 +7,242 @@
   <link rel="stylesheet" href="observatory/css/observatory.css">
 </head>
 <body>
-  <canvas id="observatory-canvas"></canvas>
+  <div id="app-shell">
 
-  <!-- ======= HUD Overlay ======= -->
-  <div id="hud">
+    <!-- ======= Sidebar ======= -->
+    <nav id="sidebar">
+      <button class="nav-icon" id="nav-home" title="Reset Camera">
+        <span class="nav-icon-glyph">&#8962;</span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-icon active" id="nav-live" title="Live View">
+        <span class="nav-icon-glyph">&#9673;</span>
+        <span class="nav-label">Live</span>
+      </button>
+      <button class="nav-icon" id="nav-devices" title="Toggle ESP32 Devices">
+        <span class="nav-icon-glyph">&#8862;</span>
+        <span class="nav-label">Devices</span>
+      </button>
+      <button class="nav-icon" id="nav-vitals" title="Toggle Vital Signal">
+        <span class="nav-icon-glyph">&#9829;</span>
+        <span class="nav-label">Vitals</span>
+      </button>
+      <button class="nav-icon" id="nav-noti" title="Event History">
+        <span class="nav-icon-glyph">
+          &#128276;
+          <span id="nav-noti-badge" class="noti-badge" style="display:none">0</span>
+        </span>
+        <span class="nav-label">Alerts</span>
+      </button>
+      <button class="nav-icon" id="nav-chat" title="Assistant">
+        <span class="nav-icon-glyph">&#128172;</span>
+        <span class="nav-label">Assistant</span>
+      </button>
+      <button class="nav-icon nav-icon--ghost" id="nav-more" title="More Settings">
+        <span class="nav-icon-glyph">&#8942;</span>
+      </button>
+    </nav>
 
-    <!-- Top-right: Connection + status + gear -->
-    <div id="status-bar">
-      <div id="data-source-badge">
-        <span class="dot dot--demo"></span>
-        <span id="data-source-label">DEMO</span>
-      </div>
-      <div id="scenario-area">
-        <span id="autoplay-icon" title="Auto-cycling">&#9654;</span>
-        <select id="scenario-quick-select" title="Change scenario">
-          <option value="auto">Auto-Cycle</option>
-          <option value="empty_room">Empty Room</option>
-          <option value="single_breathing">Vital Signs</option>
-          <option value="two_walking">Multi-Person</option>
-          <option value="fall_event">Fall Detect</option>
-          <option value="sleep_monitoring">Sleep Monitor</option>
-          <option value="intrusion_detect">Intrusion</option>
-          <option value="gesture_control">Gesture Ctrl</option>
-          <option value="crowd_occupancy">Crowd (4 ppl)</option>
-          <option value="search_rescue">Search Rescue</option>
-          <option value="elderly_care">Elderly Care</option>
-          <option value="fitness_tracking">Fitness</option>
-          <option value="security_patrol">Security Patrol</option>
-        </select>
-      </div>
+    <div id="shell-main">
+
+      <!-- ======= Header ======= -->
+      <header id="app-header">
+        <div id="header-title">
+          <div id="header-text">
+            <h1 id="page-title">Live Sensing View</h1>
+            <p id="page-subtitle">WiFi DensePose Observatory</p>
+          </div>
+        </div>
+
+        <div id="header-actions">
+          <div id="scenario-area">
+            <span id="autoplay-icon" title="Auto-cycling">&#9654;</span>
+            <select id="scenario-quick-select" title="Change scenario">
+              <option value="auto">Auto-Cycle</option>
+              <option value="empty_room">Empty Room</option>
+              <option value="single_breathing">Vital Signs</option>
+              <option value="two_walking">Multi-Person</option>
+              <option value="fall_event">Fall Detect</option>
+              <option value="sleep_monitoring">Sleep Monitor</option>
+              <option value="intrusion_detect">Intrusion</option>
+              <option value="gesture_control">Gesture Ctrl</option>
+              <option value="crowd_occupancy">Crowd (4 ppl)</option>
+              <option value="search_rescue">Search Rescue</option>
+              <option value="elderly_care">Elderly Care</option>
+              <option value="fitness_tracking">Fitness</option>
+              <option value="security_patrol">Security Patrol</option>
+            </select>
+          </div>
+          <button id="settings-btn" title="Settings">&#9881;</button>
+          <button id="header-cta" class="btn-primary">Pause</button>
+        </div>
+      </header>
       <div id="scenario-description"></div>
-      <div id="fps-counter" style="display:none">60 FPS</div>
-      <button id="settings-btn" title="Settings">&#9881;</button>
-    </div>
 
-    <!-- Right panel stack: Vital Signs + Signal & Presence -->
-    <div id="panel-right-stack">
-      <div id="panel-vitals" class="data-panel">
-        <div class="panel-header">Vital Signs</div>
-        <div class="vital-row">
-          <div class="vital-icon">&#9825;</div>
-          <div class="vital-data">
-            <div class="vital-label">Heart Rate</div>
-            <div class="vital-value"><span id="hr-value">--</span> <span class="vital-unit">BPM</span></div>
-            <div class="vital-bar"><div id="hr-bar" class="vital-bar-fill vital-bar--hr"></div></div>
+      <!-- ======= Content ======= -->
+      <div id="content-grid">
+
+        <div id="viewport-wrap">
+          <canvas id="observatory-canvas"></canvas>
+
+          <div id="edge-modules-bar"></div>
+
+          <div class="viewport-pill-group viewport-pill-group--tl">
+            <button class="viewport-pill" id="quick-grid" title="Toggle Grid">&#8862;</button>
+            <button class="viewport-pill" id="quick-room" title="Toggle Room Boundary">&#9633;</button>
           </div>
-        </div>
-        <div class="vital-row">
-          <div class="vital-icon">&#9788;</div>
-          <div class="vital-data">
-            <div class="vital-label">Respiration</div>
-            <div class="vital-value"><span id="br-value">--</span> <span class="vital-unit">RPM</span></div>
-            <div class="vital-bar"><div id="br-bar" class="vital-bar-fill vital-bar--br"></div></div>
+
+          <div class="viewport-pill-group viewport-pill-group--tr">
+            <button class="viewport-pill" id="quick-orbit" title="Auto Orbit [A]">&#8635;</button>
+            <button class="viewport-pill" id="quick-reset-cam" title="Reset Camera">&#8982;</button>
           </div>
-        </div>
-        <div class="vital-row">
-          <div class="vital-icon">&#9878;</div>
-          <div class="vital-data">
-            <div class="vital-label">Confidence</div>
-            <div class="vital-value"><span id="conf-value">--</span><span class="vital-unit">%</span></div>
-            <div class="vital-bar"><div id="conf-bar" class="vital-bar-fill vital-bar--conf"></div></div>
+
+          <div id="fps-counter" style="display:none">60 FPS</div>
+
+          <div id="key-hints">
+            <span class="key-hint">[A] Orbit</span>
+            <span class="key-hint">[D] Scenario</span>
+            <span class="key-hint">[F] FPS</span>
+            <span class="key-hint">[S] Settings</span>
+            <span class="key-hint">[Space] Pause</span>
+          </div>
+
+          <!-- ======= Right panel overlays (toggled from the sidebar) ======= -->
+          <aside id="panel-right-stack">
+
+          <!-- Event history (fall / intrusion / apnea alerts + scenario timeline) -->
+          <div id="panel-noti" class="data-panel overlay-card">
+            <div class="panel-card-header">
+              <div>
+                <div class="panel-title">Event History</div>
+                <div class="panel-subtitle" id="noti-count">0 events</div>
+              </div>
+              <span class="panel-menu">&#8942;</span>
+            </div>
+            <div id="noti-list" class="noti-list">
+              <div class="noti-empty">No events yet.</div>
+            </div>
+          </div>
+
+          <!-- ESP32 device status (mockup, styled after reference CCTV card) -->
+          <div id="panel-esp32" class="data-panel overlay-card">
+            <div class="panel-card-header">
+              <div>
+                <div class="panel-title">ESP32 Nodes</div>
+                <div class="panel-subtitle">2 Devices</div>
+              </div>
+              <span class="panel-menu">&#8942;</span>
+            </div>
+
+            <div class="device-row" data-device="s3" data-device-name="ESP32-S3 (Node 1)">
+              <div class="device-thumb device-thumb--s3">S3</div>
+              <div class="device-info">
+                <div class="device-name">ESP32-S3 &middot; Node 1</div>
+                <div class="device-meta">CSI Sensor &middot; 5 GHz</div>
+                <span class="device-status device-status--online"><span class="status-dot"></span>Online</span>
+              </div>
+              <label class="mini-toggle">
+                <input type="checkbox" id="device-toggle-s3" checked>
+                <span class="mini-toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="device-row" data-device="c6" data-device-name="ESP32-C6 (Node 2)">
+              <div class="device-thumb device-thumb--c6">C6</div>
+              <div class="device-info">
+                <div class="device-name">ESP32-C6 &middot; Node 2</div>
+                <div class="device-meta">CSI Sensor &middot; 2.4 GHz</div>
+                <span class="device-status device-status--weak"><span class="status-dot"></span>Weak Signal</span>
+              </div>
+              <label class="mini-toggle">
+                <input type="checkbox" id="device-toggle-c6" checked>
+                <span class="mini-toggle-track"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Vital Signs + WiFi Signal (toggled together as "Vital Signal") -->
+          <div id="vital-signal-group" class="overlay-card">
+            <div id="panel-vitals" class="data-panel">
+              <div class="panel-header">Vital Signs</div>
+              <div class="vital-row">
+                <div class="vital-icon">&#9825;</div>
+                <div class="vital-data">
+                  <div class="vital-label">Heart Rate</div>
+                  <div class="vital-value"><span id="hr-value">--</span> <span class="vital-unit">BPM</span></div>
+                  <div class="vital-bar"><div id="hr-bar" class="vital-bar-fill vital-bar--hr"></div></div>
+                </div>
+              </div>
+              <div class="vital-row">
+                <div class="vital-icon">&#9788;</div>
+                <div class="vital-data">
+                  <div class="vital-label">Respiration</div>
+                  <div class="vital-value"><span id="br-value">--</span> <span class="vital-unit">RPM</span></div>
+                  <div class="vital-bar"><div id="br-bar" class="vital-bar-fill vital-bar--br"></div></div>
+                </div>
+              </div>
+              <div class="vital-row">
+                <div class="vital-icon">&#9878;</div>
+                <div class="vital-data">
+                  <div class="vital-label">Confidence</div>
+                  <div class="vital-value"><span id="conf-value">--</span><span class="vital-unit">%</span></div>
+                  <div class="vital-bar"><div id="conf-bar" class="vital-bar-fill vital-bar--conf"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="panel-signal" class="data-panel">
+              <div class="panel-header">WiFi Signal</div>
+              <div class="signal-row">
+                <span class="signal-label">RSSI</span>
+                <span class="signal-value" id="rssi-value">-- dBm</span>
+              </div>
+              <div class="signal-row">
+                <span class="signal-label">Variance</span>
+                <span class="signal-value" id="var-value">--</span>
+              </div>
+              <div class="signal-row">
+                <span class="signal-label">Motion</span>
+                <span class="signal-value" id="motion-value">--</span>
+              </div>
+              <div class="signal-row">
+                <span class="signal-label">Persons</span>
+                <span class="signal-value" id="persons-value">0</span>
+                <span id="persons-dots" class="persons-dots"></span>
+              </div>
+              <canvas id="rssi-sparkline" width="220" height="40"></canvas>
+
+              <div class="panel-header" style="margin-top:10px">Presence</div>
+              <div id="presence-indicator" class="presence-state presence--absent">
+                <span id="presence-label">ABSENT</span>
+              </div>
+              <div id="fall-alert" class="fall-alert" style="display:none">FALL DETECTED</div>
+            </div>
+          </div>
+
+          </aside>
+
+          <!-- ======= Assistant chat (mockup — parses simple commands client-side) ======= -->
+          <div id="chat-panel" class="overlay-card">
+            <div class="chat-header">
+              <div class="chat-header-title">
+                <span class="chat-avatar">&#129302;</span>
+                <div>
+                  <div class="chat-title">RuView Assistant</div>
+                  <div class="chat-subtitle"><span class="chat-status-dot"></span>Online (mock)</div>
+                </div>
+              </div>
+              <button id="chat-close" class="chat-close" title="Close">&times;</button>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div id="chat-quick-actions" class="chat-quick-actions"></div>
+            <form id="chat-form" class="chat-input-row">
+              <input id="chat-input" type="text" placeholder="Ask me to do something…" autocomplete="off">
+              <button type="submit" class="chat-send" title="Send">&#10148;</button>
+            </form>
           </div>
         </div>
       </div>
-
-      <div id="panel-signal" class="data-panel">
-        <div class="panel-header">WiFi Signal</div>
-        <div class="signal-row">
-          <span class="signal-label">RSSI</span>
-          <span class="signal-value" id="rssi-value">-- dBm</span>
-        </div>
-        <div class="signal-row">
-          <span class="signal-label">Variance</span>
-          <span class="signal-value" id="var-value">--</span>
-        </div>
-        <div class="signal-row">
-          <span class="signal-label">Motion</span>
-          <span class="signal-value" id="motion-value">--</span>
-        </div>
-        <div class="signal-row">
-          <span class="signal-label">Persons</span>
-          <span class="signal-value" id="persons-value">0</span>
-          <span id="persons-dots" class="persons-dots"></span>
-        </div>
-        <canvas id="rssi-sparkline" width="200" height="48"></canvas>
-
-        <div class="panel-header" style="margin-top:12px">Presence</div>
-        <div id="presence-indicator" class="presence-state presence--absent">
-          <span id="presence-label">ABSENT</span>
-        </div>
-        <div id="fall-alert" class="fall-alert" style="display:none">FALL DETECTED</div>
-      </div>
-    </div>
-
-    <!-- Edge module badges (populated dynamically by HudController) -->
-    <div id="edge-modules-bar"></div>
-
-    <!-- Bottom-right: keyboard hints -->
-    <div id="key-hints">
-      <span class="key-hint">[A] Orbit</span>
-      <span class="key-hint">[D] Scenario</span>
-      <span class="key-hint">[F] FPS</span>
-      <span class="key-hint">[S] Settings</span>
-      <span class="key-hint">[Space] Pause</span>
     </div>
   </div>
 
