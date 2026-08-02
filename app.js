@@ -3,7 +3,6 @@
 import { TabManager } from './components/TabManager.js';
 import { DashboardTab } from './components/DashboardTab.js';
 import { HardwareTab } from './components/HardwareTab.js';
-import { LiveDemoTab } from './components/LiveDemoTab.js';
 import { apiService } from './services/api.service.js';
 import { wsService } from './services/websocket.service.js';
 import { healthService } from './services/health.service.js';
@@ -131,13 +130,6 @@ class WiFiDensePoseApp {
       this.components.hardware.init();
     }
 
-    // Live demo tab
-    const demoContainer = document.getElementById('demo');
-    if (demoContainer) {
-      this.components.demo = new LiveDemoTab(demoContainer);
-      this.components.demo.init();
-    }
-
     // Sensing tab - removed
     this.initTrainingTab();
   }
@@ -239,24 +231,15 @@ class WiFiDensePoseApp {
   // Handle tab changes
   handleTabChange(newTab, oldTab) {
     console.log(`Tab changed from ${oldTab} to ${newTab}`);
-    
-    // Stop demo if leaving demo tab
-    if (oldTab === 'demo' && this.components.demo) {
-      this.components.demo.stopDemo();
-    }
-    
+
     // Update components based on active tab
     switch (newTab) {
       case 'dashboard':
         // Dashboard auto-updates when visible
         break;
-        
+
       case 'hardware':
         // Hardware visualization is always active
-        break;
-        
-      case 'demo':
-        // Demo starts manually
         break;
 
       case 'training':

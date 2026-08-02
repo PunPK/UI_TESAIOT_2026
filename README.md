@@ -24,10 +24,8 @@ ui/
 ├── components/
 │   ├── TabManager.js         # Tab navigation component
 │   ├── DashboardTab.js       # Dashboard with live system metrics
-│   ├── LiveDemoTab.js        # Live pose detection with setup guide
 │   ├── HardwareTab.js        # Hardware configuration
 │   ├── SettingsPanel.js      # Settings panel
-│   ├── PoseDetectionCanvas.js # Canvas-based pose skeleton renderer
 │   ├── gaussian-splats.js    # 3D Gaussian splat signal field renderer (Three.js)
 │   ├── body-model.js         # 3D body model
 │   ├── scene.js              # Three.js scene management
@@ -53,17 +51,6 @@ ui/
 - **Data source banner**: green "LIVE - ESP32", yellow "RECONNECTING...", or red "SIMULATED DATA"
 - Sparkline RSSI history graph
 - "About This Data" card explaining CSI capabilities per sensor count
-
-### Live Demo Tab
-- WebSocket-based real-time pose skeleton rendering
-- **Estimation Mode badge**: green "Signal-Derived" or blue "Model Inference"
-- **Setup Guide panel** showing what each ESP32 count provides:
-  - 1 ESP32: presence, breathing, gross motion
-  - 2-3 ESP32s: body localization, motion direction
-  - 4+ ESP32s + trained model: individual limb tracking, full pose
-- Debug mode with log export
-- Zone selection and force-reconnect controls
-- Performance metrics sidebar (frames, uptime, errors)
 
 ### Dashboard
 - Live system health monitoring

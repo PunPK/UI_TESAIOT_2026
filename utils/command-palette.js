@@ -24,8 +24,6 @@ export class CommandPalette {
     const tabs = [
       { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
       { id: 'hardware', label: 'Hardware', icon: 'cpu' },
-      { id: 'demo', label: 'Live Demo', icon: 'play' },
-      { id: 'sensing', label: 'Sensing', icon: 'wifi' },
       { id: 'training', label: 'Training', icon: 'database' },
     ];
 

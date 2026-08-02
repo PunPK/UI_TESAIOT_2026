@@ -31,8 +31,6 @@ const SHELL_ASSETS = [
   '/components/TabManager.js',
   '/components/DashboardTab.js',
   '/components/HardwareTab.js',
-  '/components/LiveDemoTab.js',
-  '/components/PoseDetectionCanvas.js',
   '/services/api.service.js',
   '/services/websocket.service.js',
   '/services/health.service.js',
