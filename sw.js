@@ -1,11 +1,19 @@
 // RuView Service Worker - Offline caching for the dashboard shell
-// Strategy: Network-first for API calls, Cache-first for static assets
+// Strategy: Network-first for API calls, stale-while-revalidate for static assets
 
 // Bumped from v1: an older SW cached `/oauth/status` cache-first, so browsers
 // that ran it hold a permanently signed-out answer. `activate` deletes every
 // cache whose name is not CACHE_NAME, so bumping is what evicts it from clients
 // already in the field. Bump again if a future change poisons the cache.
-const CACHE_NAME = 'ruview-v2';
+//
+// Bumped to v3: static assets (style.css, app.js, ...) were served pure
+// cache-first with no revalidation. That cache only ever refreshes when
+// sw.js's own bytes change and the browser reinstalls it - editing style.css
+// alone never invalidated the old entry, so the page ran on a stale
+// stylesheet until someone manually cleared site data. Static assets now use
+// stale-while-revalidate: the cached copy is returned immediately, and a
+// background fetch updates the cache for the next load.
+const CACHE_NAME = 'ruview-v3';
 
 // Requests whose response depends on the caller's credentials. These must never
 // be served from the Cache API.
@@ -17,10 +25,10 @@ const CACHE_NAME = 'ruview-v2';
 // worker entirely — showed the true state. (ADR-271.)
 const NEVER_CACHE_PREFIXES = ['/oauth/'];
 
-// What may be served cache-first. Previously cache-first was the *catch-all* for
-// everything outside `/api/` and `/health/`, which meant any endpoint added at a
-// new path was frozen on first response. An allowlist fails safe instead: an
-// unrecognised path goes to the network untouched.
+// What may be served stale-while-revalidate. Previously this was the *catch-all*
+// for everything outside `/api/` and `/health/`, which meant any endpoint added
+// at a new path was frozen on first response. An allowlist fails safe instead:
+// an unrecognised path goes to the network untouched.
 const STATIC_ASSET = /\.(?:js|mjs|css|html|json|png|jpe?g|gif|svg|ico|webp|woff2?|ttf|map)$/i;
 const SHELL_ASSETS = [
   '/',
@@ -73,7 +81,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch - network-first for API, cache-first for static
+// Fetch - network-first for API, stale-while-revalidate for static
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -107,39 +115,49 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets and the app shell: cache-first with network fallback.
+  // Static assets and the app shell: stale-while-revalidate.
   if (request.mode === 'navigate' || STATIC_ASSET.test(url.pathname)) {
-    event.respondWith(cacheFirst(request));
+    event.respondWith(staleWhileRevalidate(event));
   }
 
   // Anything else is left alone and goes to the network as normal.
 });
 
-async function cacheFirst(request) {
+async function staleWhileRevalidate(event) {
+  const { request } = event;
+  const cache = await caches.open(CACHE_NAME);
+
   // `ignoreSearch` so the shell is a single entry. Sign-in redirects back to
   // `/ui/?signed_in=<ms>`, which would otherwise mint a fresh cache entry per
   // sign-in and never hit any of them again.
-  const cached = await caches.match(request, { ignoreSearch: true });
-  if (cached) return cached;
+  const cached = await cache.match(request, { ignoreSearch: true });
 
-  try {
-    const response = await fetch(request);
+  // Always refetch in the background so the cache heals itself on the next
+  // load instead of staying pinned to whatever was first cached.
+  const refresh = fetch(request).then((response) => {
     if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
       // Store under the search-less URL to match how it is looked up above.
       const key = new URL(request.url);
       key.search = '';
       cache.put(key.toString(), response.clone());
     }
     return response;
-  } catch {
-    // Return offline fallback for HTML navigation
-    if (request.headers.get('Accept')?.includes('text/html')) {
-      const fallback = await caches.match('/index.html');
-      if (fallback) return fallback;
-    }
-    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+  }).catch(() => null);
+
+  if (cached) {
+    event.waitUntil(refresh);
+    return cached;
   }
+
+  const network = await refresh;
+  if (network) return network;
+
+  // Return offline fallback for HTML navigation
+  if (request.headers.get('Accept')?.includes('text/html')) {
+    const fallback = await caches.match('/index.html');
+    if (fallback) return fallback;
+  }
+  return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
 }
 
 /**
