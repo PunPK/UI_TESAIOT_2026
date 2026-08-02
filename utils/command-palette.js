@@ -24,11 +24,6 @@ export class CommandPalette {
     const tabs = [
       { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
       { id: 'hardware', label: 'Hardware', icon: 'cpu' },
-      { id: 'demo', label: 'Live Demo', icon: 'play' },
-      { id: 'architecture', label: 'Architecture', icon: 'layers' },
-      { id: 'performance', label: 'Performance', icon: 'zap' },
-      { id: 'applications', label: 'Applications', icon: 'box' },
-      { id: 'sensing', label: 'Sensing', icon: 'wifi' },
       { id: 'training', label: 'Training', icon: 'database' },
     ];
 
@@ -46,13 +41,6 @@ export class CommandPalette {
     });
 
     // External pages
-    this.commands.push({
-      category: 'Navigation',
-      label: 'Open Pose Fusion',
-      keywords: ['pose', 'fusion', 'camera'],
-      icon: 'external',
-      action: () => { window.location.href = 'pose-fusion.html'; }
-    });
     this.commands.push({
       category: 'Navigation',
       label: 'Open Observatory',
@@ -89,20 +77,6 @@ export class CommandPalette {
       keywords: ['export', 'download', 'csv', 'json', 'data', 'save'],
       icon: 'download',
       action: () => document.dispatchEvent(new CustomEvent('export-data'))
-    });
-    this.commands.push({
-      category: 'Actions',
-      label: 'Toggle Fullscreen',
-      keywords: ['fullscreen', 'full', 'screen', 'maximize'],
-      icon: 'maximize',
-      action: () => document.dispatchEvent(new CustomEvent('toggle-fullscreen'))
-    });
-    this.commands.push({
-      category: 'Actions',
-      label: 'Show Keyboard Shortcuts',
-      keywords: ['keyboard', 'shortcuts', 'keys', 'help'],
-      icon: 'keyboard',
-      action: () => document.dispatchEvent(new CustomEvent('show-shortcuts'))
     });
   }
 

@@ -38,18 +38,6 @@ export class Onboarding {
         position: 'bottom'
       },
       {
-        title: 'Live Demo',
-        text: 'Switch to the Live Demo tab to see real-time pose detection. Connect an ESP32 sensor or use the built-in simulation.',
-        target: '[data-tab="demo"]',
-        position: 'bottom'
-      },
-      {
-        title: 'Sensing Visualization',
-        text: 'The Sensing tab shows a 3D Gaussian splat visualization of WiFi signal fields, with real-time metrics.',
-        target: '[data-tab="sensing"]',
-        position: 'bottom'
-      },
-      {
         title: 'Keyboard Shortcuts',
         text: 'Press ? for shortcuts, Ctrl+K for the command palette, or use number keys 1-8 to switch tabs quickly.',
         target: null,
@@ -57,7 +45,7 @@ export class Onboarding {
       },
       {
         title: 'You\'re all set!',
-        text: 'Explore the dashboard, connect hardware, or start the demo. You can replay this tour anytime from the command palette.',
+        text: 'Explore the dashboard or connect hardware. You can replay this tour anytime from the command palette.',
         target: null,
         position: 'center'
       }

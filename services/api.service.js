@@ -164,7 +164,7 @@ export class ApiService {
 // Create singleton instance
 export const apiService = new ApiService();
 
-// Storage key shared with the QuickSettings "API Access" panel.
+// Storage key for API token (used by data-export panel)
 export const API_TOKEN_STORAGE_KEY = 'ruview-api-token';
 
 // Apply a previously-saved bearer token at module load — before app init
