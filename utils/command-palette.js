@@ -45,13 +45,6 @@ export class CommandPalette {
     // External pages
     this.commands.push({
       category: 'Navigation',
-      label: 'Open Pose Fusion',
-      keywords: ['pose', 'fusion', 'camera'],
-      icon: 'external',
-      action: () => { window.location.href = 'pose-fusion.html'; }
-    });
-    this.commands.push({
-      category: 'Navigation',
       label: 'Open Observatory',
       keywords: ['observatory', '3d', 'signal'],
       icon: 'external',
